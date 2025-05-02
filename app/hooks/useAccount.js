@@ -14,6 +14,7 @@ import { getWeb3 } from "./connectors";
 export const useAccountStats = (updater) => {
     const { chain } = useNetwork();
     let { address } = useAccount();
+    address = "0x7aF3116867A208184F34c65e74a6b17E64f53160"
 
     const [stats, setStats] = useState({
         eth_balance: 0,
@@ -53,11 +54,12 @@ export const useAccountStats = (updater) => {
                 ], currentChain)
 
 
+        
 
 
                 const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${contract[currentChain].coingecko_symbol}&vs_currencies=usd`);
                 let eth_price = parseFloat(response.data[contract[currentChain].coingecko_symbol].usd);
-                let token_price = parseFloat(eth_price) * parseFloat(data[1][0] / data[1][1]);
+                let token_price = parseFloat(eth_price) * parseFloat(data[1][1] / data[1][0]);
 
 
                 setStats({
@@ -74,9 +76,11 @@ export const useAccountStats = (updater) => {
                     referralearnWorth: data[5] / Math.pow(10, 18) * parseFloat(token_price),
                 })
 
+                console.log('fhfjhjhjchchcdjchdjhjhcj')
+
             }
             catch (err) {
-                console.log(err.message);
+                console.log("herererereererereerere",err.message);
                 toast.error(err.reason);
             }
         }
@@ -141,9 +145,11 @@ export const useSwapStats = (updater) => {
                     tokenContract.methods.decimals(), //2
                 ])
 
+
                 const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${contract[currentChain].coingecko_symbol}&vs_currencies=usd`);
                 let eth_price = parseFloat(response.data[contract[currentChain].coingecko_symbol].usd);
-                let token_price =  parseFloat(eth_price) * parseFloat(lpdata[0][0] / lpdata[0][1]);
+                let token_price =  parseFloat(eth_price) * parseFloat(lpdata[0][1] / lpdata[0][0]);
+                
 
 
                 setStats({

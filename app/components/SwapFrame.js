@@ -12,7 +12,7 @@ import {
   getContract,
   getWeb3Contract,
 } from "../hooks/contractHelper";
-import { contract, DEFAULT_CHAIN, SUPPORTED_CHAIN } from "../hooks/constant";
+import { BUY_TAX, contract, DEFAULT_CHAIN, SELL_TAX, SUPPORTED_CHAIN } from "../hooks/constant";
 import { useAccount, useNetwork } from "wagmi";
 import Connect from "./Connect";
 import { useEthersSigner } from "../hooks/useEthersProvider";
@@ -111,7 +111,13 @@ function SwapInterface({ searchParams }) {
         const amounts = await routerContract.methods
           .getAmountsOut(amountIn, path)
           .call();
-        const outputAmount = ethers.utils.formatUnits(amounts[1], 18);
+        let outputAmount = ethers.utils.formatUnits(amounts[1], 18);
+        if(fromCurrency === "ETH"){
+          outputAmount = parseFloat(outputAmount) - parseFloat(outputAmount * BUY_TAX / 100)
+        }
+        else{
+          outputAmount = parseFloat(outputAmount) - parseFloat(outputAmount * SELL_TAX / 100)
+        }
 
         setToAmount(outputAmount);
       } catch (error) {
@@ -198,6 +204,7 @@ function SwapInterface({ searchParams }) {
             }
           }, 5000);
         } catch (err) {
+          console.log(err.message);
           toast.error(err.reason ? err.reason : err.message);
           setLoading(false);
         }
@@ -290,6 +297,7 @@ function SwapInterface({ searchParams }) {
       </div>
     );
   }
+
 
   const fromdollarValue =
     fromCurrency === "ETH"
