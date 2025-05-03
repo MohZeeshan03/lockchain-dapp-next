@@ -41,9 +41,9 @@ export const useTokenInfoStats = (updater) => {
                     tokenContract.methods.balanceOf(contract[currentChain].TOKEN_LP_ADDRESS), //3
                 ])
 
-                // const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${contract[currentChain].coingecko_symbol}&vs_currencies=usd`);
-                let eth_price = 3400; //parseFloat(response.data[contract[currentChain].coingecko_symbol].usd);
-                let token_price = eth_price * (data[2][0] / data[2][1]);
+                const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${contract[currentChain].coingecko_symbol}&vs_currencies=usd`);
+                let eth_price = parseFloat(response.data[contract[currentChain].coingecko_symbol].usd);
+                let token_price = eth_price * (data[2][1] / data[2][0]);
 
                 
                 setStats({
