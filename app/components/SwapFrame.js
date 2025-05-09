@@ -34,7 +34,6 @@ function SwapInterface({ searchParams }) {
   const [toAmount, setToAmount] = useState("");
   const [routerContract, setRouterContract] = useState(null);
   const signer = useEthersSigner();
-  const [refAddress, setRefAddress] = useState("");
   const [updater, setUpdater] = useState(1);
   const accStats = useSwapStats(updater);
   const [loading, setLoading] = useState(false);
@@ -73,12 +72,6 @@ function SwapInterface({ searchParams }) {
 
         setRouterContract(routerContractInstance);
 
-        // Handle referral address
-        let refAddr = "";
-        if (searchParams?.get("ref")) {
-          refAddr = searchParams.get("ref");
-        }
-        setRefAddress(refAddr);
 
         setInitialized(true);
       } catch (error) {
@@ -144,8 +137,8 @@ function SwapInterface({ searchParams }) {
   };
 
   const handleSubmit = async () => {
-    if (!mounted) return;
-
+    // if (!mounted) return;
+    
     if (address) {
       if (chain && chain.id && SUPPORTED_CHAIN.includes(chain.id)) {
         try {
@@ -157,7 +150,14 @@ function SwapInterface({ searchParams }) {
             signer
           );
           let tx;
-          let referral = refAddress ? refAddress : zeroAddress;
+          
+          let refAddr = "";
+          if (searchParams?.get("ref")) {
+            refAddr = searchParams.get("ref");
+          }
+          
+          let referral = refAddr ? refAddr : zeroAddress;
+          console.log(referral);
           if (fromCurrency === "ETH") {
             tx = await swapContract.createBuy(referral, {
               from: address,
