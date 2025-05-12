@@ -51,15 +51,41 @@ export const useAccountStats = (updater) => {
                     vestContract.methods.userRecords(address), //3
                     vestContract.methods.getClaimableAmount(address), //4
                     swapContract.methods.userCommission(address), //5
+                    tokenLpContract.methods.token0(),             
+                    tokenLpContract.methods.token1(),
                 ], currentChain)
 
 
-        
+
 
 
                 const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${contract[currentChain].coingecko_symbol}&vs_currencies=usd`);
                 let eth_price = parseFloat(response.data[contract[currentChain].coingecko_symbol].usd);
-                let token_price = parseFloat(eth_price) * parseFloat(data[1][1] / data[1][0]);
+                // Get reserves
+                const reserve0 = data[1][0];
+                const reserve1 = data[1][1];
+
+                // Get token0 and token1
+                const token0 = data[6];
+                const token1 = data[7];
+
+                // Now find which token is WETH, and which is your token
+                const yourTokenAddress = contract[currentChain].TOKEN_ADDRESS; // assume your token address here
+
+                let tokenPriceInETH;
+
+                if (yourTokenAddress.toLowerCase() === token0.toLowerCase()) {
+                    // your token is token0, WETH is token1
+                    tokenPriceInETH = reserve1 / reserve0;
+                } else if (yourTokenAddress.toLowerCase() === token1.toLowerCase()) {
+                    // your token is token1, WETH is token0
+                    tokenPriceInETH = reserve0 / reserve1;
+                } else {
+                    throw new Error("Token not found in LP!");
+                }
+
+                // Now final price in USD
+                let token_price = tokenPriceInETH * eth_price;
 
 
                 setStats({
@@ -80,7 +106,7 @@ export const useAccountStats = (updater) => {
 
             }
             catch (err) {
-                console.log("herererereererereerere",err.message);
+                console.log("herererereererereerere", err.message);
                 toast.error(err.reason);
             }
         }
@@ -118,7 +144,7 @@ export const useSwapStats = (updater) => {
         token_balance: 0,
         referralearn: 0,
         referralearnWorth: 0,
-        allowence : 0
+        allowence: 0
     });
 
     let web3 = getWeb3();
@@ -126,7 +152,7 @@ export const useSwapStats = (updater) => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                let eth_bal = address ? web3.utils.fromWei(await web3.eth.getBalance(address) , 'ether') : 0
+                let eth_bal = address ? web3.utils.fromWei(await web3.eth.getBalance(address), 'ether') : 0
                 let currentChain = chain && chain.id ? SUPPORTED_CHAIN.includes(chain.id) ? chain.id : DEFAULT_CHAIN : DEFAULT_CHAIN;
                 const tokenContract = getWeb3Contract(tokenAbi, contract[currentChain].TOKEN_ADDRESS, currentChain);
                 const tokenLpContract = getWeb3Contract(pairAbi, contract[currentChain].TOKEN_LP_ADDRESS, currentChain);
@@ -136,20 +162,47 @@ export const useSwapStats = (updater) => {
                     data = await getMultiCall([
                         tokenContract.methods.balanceOf(address), //0
                         swapContract.methods.userCommission(address), //3
-                        tokenContract.methods.allowance(address,contract[currentChain].SWAP_ADDRESS), //3
+                        tokenContract.methods.allowance(address, contract[currentChain].SWAP_ADDRESS), //3
                     ], currentChain)
                 }
 
                 let lpdata = await getMultiCall([
                     tokenLpContract.methods.getReserves(), //1
                     tokenContract.methods.decimals(), //2
+                    tokenLpContract.methods.token0(),   //3          
+                    tokenLpContract.methods.token1(), //4
                 ])
 
 
                 const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${contract[currentChain].coingecko_symbol}&vs_currencies=usd`);
                 let eth_price = parseFloat(response.data[contract[currentChain].coingecko_symbol].usd);
-                let token_price =  parseFloat(eth_price) * parseFloat(lpdata[0][1] / lpdata[0][0]);
                 
+                // Get reserves
+                const reserve0 = data[0][0];
+                const reserve1 = data[0][1];
+
+                // Get token0 and token1
+                const token0 = data[2];
+                const token1 = data[3];
+
+                // Now find which token is WETH, and which is your token
+                const yourTokenAddress = contract[currentChain].TOKEN_ADDRESS; // assume your token address here
+
+                let tokenPriceInETH;
+
+                if (yourTokenAddress.toLowerCase() === token0.toLowerCase()) {
+                    // your token is token0, WETH is token1
+                    tokenPriceInETH = reserve1 / reserve0;
+                } else if (yourTokenAddress.toLowerCase() === token1.toLowerCase()) {
+                    // your token is token1, WETH is token0
+                    tokenPriceInETH = reserve0 / reserve1;
+                } else {
+                    throw new Error("Token not found in LP!");
+                }
+
+                // Now final price in USD
+                let token_price = tokenPriceInETH * eth_price;
+
 
 
                 setStats({
@@ -159,7 +212,7 @@ export const useSwapStats = (updater) => {
                     token_balance: data && data.length > 0 ? parseFloat(data[0] / Math.pow(10, lpdata[1])) : 0,
                     referralearn: data && data.length > 0 ? data[1] / Math.pow(10, 18) : 0,
                     referralearnWorth: data && data.length > 0 ? data[1] / Math.pow(10, 18) * parseFloat(token_price) : 0,
-                    allowence : data && data.length > 0 ? data[2] / Math.pow(10,18) : 0
+                    allowence: data && data.length > 0 ? data[2] / Math.pow(10, 18) : 0
                 })
 
             }
